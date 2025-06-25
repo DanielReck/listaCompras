@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>🛒 Lista de Compras Supermercado</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    color: #2c3e50;
+    text-align: center;
+  }
+  form, .filter {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+  input, button {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  button {
+    background-color: #3498db;
+    color: white;
+    cursor: pointer;
+    border: none;
+  }
+  button:hover {
+    background-color: #2980b9;
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  li {
+    background: #fff;
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .buttons {
+    display: flex;
+    gap: 5px;
+  }
+  .total {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 15px;
+  }
+</style>
+</head>
+<body>
+<h1>🛒 Lista de Compras</h1>
+
+<form id="form-produto">
+  <input id="nome" type="text" placeholder="Nome do produto" required>
+  <input id="quantidade" type="number" placeholder="Qtd." required min="1">
+  <button type="submit">Adicionar</button>
+</form>
+
+<input id="filtro" class="filter" placeholder="Filtrar por nome...">
+
+<ul id="lista"></ul>
+
+<div class="total" id="total"></div>
+
+<script>
+let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
+const form = document.getElementById("form-produto");
+const nomeInput = document.getElementById("nome");
+const quantidadeInput = document.getElementById("quantidade");
+const filtroInput = document.getElementById("filtro");
+const lista = document.getElementById("lista");
+const totalDiv = document.getElementById("total");
+
+function atualizaLista(filtro = "") {
+  lista.innerHTML = "";
+  let totalQtd = 0;
+  const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(filtro.toLowerCase()));
+  
+  if (filtrados.length === 0) {
+    lista.innerHTML = "<li style='justify-content: center; color: #888;'>Nenhum item na lista</li>";
+  } else {
+    filtrados.forEach((produto, index) => {
+      totalQtd += produto.quantidade;
+      const li = document.createElement("li");
+      li.innerHTML = `<span>${produto.nome} - ${produto.quantidade}</span>`;
+      
+      const buttonsDiv = document.createElement("div");
+      buttonsDiv.className = "buttons";
+      
+      const botaoEditar = document.createElement("button");
+      botaoEditar.textContent = "Editar";
+      botaoEditar.style.background = "#f39c12";
+      botaoEditar.addEventListener("click", () => editarProduto(index));
+      
+      const botaoRemover = document.createElement("button");
+      botaoRemover.textContent = "Remover";
+      botaoRemover.style.background = "#e74c3c";
+      botaoRemover.addEventListener("click", () => {
+        if (confirm("Deseja realmente remover este item?")) {
+          produtos.splice(index, 1);
+          salvaNoLocalStorage();
+          atualizaLista(filtroInput.value);
+        }
+      });
+      
+      buttonsDiv.appendChild(botaoEditar);
+      buttonsDiv.appendChild(botaoRemover);
+      li.appendChild(buttonsDiv);
+      lista.appendChild(li);
+    });
+  }
+  totalDiv.textContent = `Total de itens: ${totalQtd}`;
+}
+
+function salvaNoLocalStorage() {
+  localStorage.setItem("produtos", JSON.stringify(produtos));
+}
+
+function editarProduto(index) {
+  const produto = produtos[index];
+  const novoNome = prompt("Novo nome do produto:", produto.nome);
+  const novaQtd = prompt("Nova quantidade:", produto.quantidade);
+  
+  if (novoNome && novaQtd && !isNaN(novaQtd) && Number(novaQtd) > 0) {
+    produtos[index] = { nome: novoNome.trim(), quantidade: Number(novaQtd) };
+    salvaNoLocalStorage();
+    atualizaLista(filtroInput.value);
+  } else {
+    alert("Dados inválidos. Edição cancelada.");
+  }
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const nome = nomeInput.value.trim();
+  const quantidade = Number(quantidadeInput.value);
+  if (nome && quantidade > 0) {
+    produtos.push({ nome, quantidade });
+    salvaNoLocalStorage();
+    atualizaLista(filtroInput.value);
+    form.reset();
+  }
+});
+
+filtroInput.addEventListener("input", (event) => {
+  atualizaLista(event.target.value);
+});
+
+atualizaLista();
+</script>
+</body>
+</html>
