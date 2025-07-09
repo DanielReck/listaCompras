@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>🛒 Lista de Compras Supermercado</title>
 <style>
   body {
@@ -10,9 +10,17 @@
     margin: 0;
     padding: 20px;
   }
-  h1 {
+  .cabecalho {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+  .cabecalho h1 {
+    margin: 0;
+    font-size: 24px;
     color: #2c3e50;
-    text-align: center;
   }
   form, .filter {
     display: flex;
@@ -59,39 +67,92 @@
     font-weight: bold;
     margin-top: 15px;
   }
+  /* 🌙 Modo Escuro */
+  body.escuro {
+    background: #1e1e1e;
+    color: #f0f0f0;
+  }
+  body.escuro input,
+  body.escuro button,
+  body.escuro li {
+    background-color: #2c2c2c;
+    color: #f0f0f0;
+    border-color: #555;
+  }
+  /* 🎨 Modo Daltonismo */
+  body.daltonismo {
+    background: #fff8dc;
+    color: #000;
+  }
+  body.daltonismo input,
+  body.daltonismo button,
+  body.daltonismo li {
+    background-color: #ffffe0;
+    color: #000;
+    border-color: #888;
+  }
+
+  /* Botão azul padrão */
+button {
+  background-color: #3498db;
+  color: white;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.3s;
+}
+button:hover {
+  background-color: #2980b9;
+}
+
+/* No modo escuro, mantém o botão azul */
+body.escuro button {
+  background-color: #3498db;
+  color: white;
+}
+body.escuro button:hover {
+  background-color: #2980b9;
+}
+
+/* No modo daltonismo, mantém o botão azul */
+body.daltonismo button {
+  background-color: #3498db;
+  color: white;
+}
+body.daltonismo button:hover {
+  background-color: #2980b9;
+}
+
+img {
+      transform: translateX(630px)
+}
+
 </style>
 </head>
 <body>
-<h1>🛒 Lista de Compras</h1>
+  <div class="cabecalho">
+    <h1>🛒 Lista de Compras</h1>
+    <button id="btn-tema">Mudar tema</button>
+  </div>
 
-<form id="form-produto">
-  <input id="nome" type="text" placeholder="Nome do produto" required>
-  <input id="quantidade" type="number" placeholder="Qtd." required min="1">
-  <button type="submit">Adicionar</button>
-</form>
+  <form id="form-produto">
+    <input id="nome" type="text" placeholder="Nome do produto" required />
+    <input id="quantidade" type="number" placeholder="Qtd." required min="1" />
+    <button type="submit">Adicionar</button>
+  </form>
 
-<input id="filtro" class="filter" placeholder="Filtrar por nome...">
+  <input id="filtro" class="filter" placeholder="Filtrar por nome..." />
 
-<ul id="lista"></ul>
+  <ul id="lista"></ul>
 
-<div class="total" id="total"></div>
-
-<!-- 🔘 NOVO: Contador de cliques -->
-<div style="text-align: center; margin-top: 30px;">
-  <button id="botao-contador">Clique aqui!</button>
-  <p id="contador">Total de cliques: 0</p>
-  
-  <button id="salvar-clique" style="margin-top: 10px;">Salvar clique atual</button>
-  <p id="clique-salvo">Último clique salvo: 0</p>
-</div>
+  <div class="total" id="total"></div>
+  <br>
+<img src="https://i.pinimg.com/736x/2b/ac/88/2bac88e2fdf58d18f40148d3c00a0aa7.jpg"/>
 
 <script>
-// ==============================
-// 🛒 Lista de compras
-// ==============================
-
+// Recupera a lista de produtos do localStorage (ou inicia com lista vazia)
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
+// Referências dos elementos
 const form = document.getElementById("form-produto");
 const nomeInput = document.getElementById("nome");
 const quantidadeInput = document.getElementById("quantidade");
@@ -99,9 +160,24 @@ const filtroInput = document.getElementById("filtro");
 const lista = document.getElementById("lista");
 const totalDiv = document.getElementById("total");
 
+// Referência ao botão "Adicionar"
+const btnAdicionar = form.querySelector('button[type="submit"]');
+
+// Recupera contador de cliques do botão "Adicionar" do localStorage ou inicia em 0
+let cliquesAdicionar = Number(localStorage.getItem('cliquesAdicionar')) || 0;
+
+// Atualiza o texto do botão "Adicionar" para mostrar a quantidade de cliques
+function atualizaTextoBotao() {
+  btnAdicionar.textContent = `Adicionar (${cliquesAdicionar})`;
+}
+// Inicializa o texto do botão ao carregar a página
+atualizaTextoBotao();
+
+// Função para atualizar a lista na tela
 function atualizaLista(filtro = "") {
   lista.innerHTML = "";
   let totalQtd = 0;
+
   const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(filtro.toLowerCase()));
 
   if (filtrados.length === 0) {
@@ -109,6 +185,7 @@ function atualizaLista(filtro = "") {
   } else {
     filtrados.forEach((produto, index) => {
       totalQtd += produto.quantidade;
+
       const li = document.createElement("li");
       li.innerHTML = `<span>${produto.nome} - ${produto.quantidade}</span>`;
 
@@ -137,14 +214,15 @@ function atualizaLista(filtro = "") {
       lista.appendChild(li);
     });
   }
-
   totalDiv.textContent = `Total de itens: ${totalQtd}`;
 }
 
+// Salva os produtos no localStorage
 function salvaNoLocalStorage() {
   localStorage.setItem("produtos", JSON.stringify(produtos));
 }
 
+// Edita um produto existente com prompts
 function editarProduto(index) {
   const produto = produtos[index];
   const novoNome = prompt("Novo nome do produto:", produto.nome);
@@ -159,8 +237,10 @@ function editarProduto(index) {
   }
 }
 
+// Evento submit do formulário (adiciona novo produto)
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+
   const nome = nomeInput.value.trim();
   const quantidade = Number(quantidadeInput.value);
 
@@ -169,54 +249,44 @@ form.addEventListener("submit", (event) => {
     salvaNoLocalStorage();
     atualizaLista(filtroInput.value);
     form.reset();
+
+    // Incrementa contador de cliques do botão "Adicionar"
+    cliquesAdicionar++;
+    localStorage.setItem('cliquesAdicionar', cliquesAdicionar);
+    atualizaTextoBotao();
   }
 });
 
+// Evento input no filtro
 filtroInput.addEventListener("input", (event) => {
   atualizaLista(event.target.value);
 });
 
+// Inicializa a lista na carga da página
 atualizaLista();
 
+// Tema escuro / daltonismo
+const btnTema = document.getElementById("btn-tema");
+const body = document.body;
+let temaAtual = localStorage.getItem("tema") || "claro";
+aplicaTema(temaAtual);
 
-// ==============================
-// 🔢 Contador de cliques
-// ==============================
-
-// Pega valor salvo ou inicia com 0
-let cliques = parseInt(localStorage.getItem("cliques")) || 0;
-
-// Elementos do contador
-const botaoContador = document.getElementById("botao-contador");
-const contadorParagrafo = document.getElementById("contador");
-
-// Mostra o valor salvo
-contadorParagrafo.textContent = `Total de cliques: ${cliques}`;
-
-// Evento de clique no botão
-botaoContador.addEventListener("click", () => {
-  cliques++;
-  localStorage.setItem("cliques", cliques);
-  contadorParagrafo.textContent = `Total de cliques: ${cliques}`;
+btnTema.addEventListener("click", () => {
+  if (temaAtual === "claro") {
+    temaAtual = "escuro";
+  } else if (temaAtual === "escuro") {
+    temaAtual = "daltonismo";
+  } else {
+    temaAtual = "claro";
+  }
+  aplicaTema(temaAtual);
+  localStorage.setItem("tema", temaAtual);
 });
 
-
-// ==============================
-// 💾 Salvar valor atual de cliques
-// ==============================
-
-const btnSalvarClique = document.getElementById("salvar-clique");
-const paragrafoCliqueSalvo = document.getElementById("clique-salvo");
-
-// Mostrar valor salvo anteriormente
-const cliqueSalvo = localStorage.getItem("cliquesSalvos") || 0;
-paragrafoCliqueSalvo.textContent = `Último clique salvo: ${cliqueSalvo}`;
-
-// Evento para salvar valor atual
-btnSalvarClique.addEventListener("click", () => {
-  localStorage.setItem("cliquesSalvos", cliques);
-  paragrafoCliqueSalvo.textContent = `Último clique salvo: ${cliques}`;
-});
+function aplicaTema(tema) {
+  body.classList.remove("claro", "escuro", "daltonismo");
+  if (tema !== "claro") body.classList.add(tema);
+}
 </script>
 </body>
 </html>
