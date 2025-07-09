@@ -76,11 +76,22 @@
 
 <div class="total" id="total"></div>
 
+<!-- 🔘 NOVO: Contador de cliques -->
+<div style="text-align: center; margin-top: 30px;">
+  <button id="botao-contador">Clique aqui!</button>
+  <p id="contador">Total de cliques: 0</p>
+  
+  <button id="salvar-clique" style="margin-top: 10px;">Salvar clique atual</button>
+  <p id="clique-salvo">Último clique salvo: 0</p>
+</div>
+
 <script>
-// Recupera a lista de produtos do localStorage (ou inicia com lista vazia, se for a primeira vez)
+// ==============================
+// 🛒 Lista de compras
+// ==============================
+
 let produtos = JSON.parse(localStorage.getItem("produtos")) || [];
 
-// Referências aos elementos do DOM (formulário, inputs, lista, total)
 const form = document.getElementById("form-produto");
 const nomeInput = document.getElementById("nome");
 const quantidadeInput = document.getElementById("quantidade");
@@ -88,137 +99,124 @@ const filtroInput = document.getElementById("filtro");
 const lista = document.getElementById("lista");
 const totalDiv = document.getElementById("total");
 
-
-// 🔁 Função principal que renderiza a lista de produtos na tela
 function atualizaLista(filtro = "") {
-  // Limpa o conteúdo atual da lista
   lista.innerHTML = "";
-
-  // Inicializa o contador de quantidade total
   let totalQtd = 0;
-
-  // Filtra os produtos com base no texto do campo de filtro (ignora maiúsculas/minúsculas)
   const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(filtro.toLowerCase()));
 
-  // Se não houver produtos filtrados, mostra mensagem padrão
   if (filtrados.length === 0) {
     lista.innerHTML = "<li style='justify-content: center; color: #888;'>Nenhum item na lista</li>";
   } else {
-    // Para cada produto filtrado, cria o item da lista
     filtrados.forEach((produto, index) => {
-      // Soma a quantidade ao total
       totalQtd += produto.quantidade;
-
-      // Cria o elemento <li> com nome e quantidade
       const li = document.createElement("li");
       li.innerHTML = `<span>${produto.nome} - ${produto.quantidade}</span>`;
 
-      // Cria a <div> que conterá os botões "Editar" e "Remover"
       const buttonsDiv = document.createElement("div");
       buttonsDiv.className = "buttons";
 
-      // Cria botão "Editar"
       const botaoEditar = document.createElement("button");
       botaoEditar.textContent = "Editar";
       botaoEditar.style.background = "#f39c12";
-
-      // Adiciona evento para editar o produto ao clicar no botão
       botaoEditar.addEventListener("click", () => editarProduto(index));
 
-      // Cria botão "Remover"
       const botaoRemover = document.createElement("button");
       botaoRemover.textContent = "Remover";
       botaoRemover.style.background = "#e74c3c";
-
-      // Adiciona evento para remover o produto com confirmação
       botaoRemover.addEventListener("click", () => {
         if (confirm("Deseja realmente remover este item?")) {
-          // Remove o item da lista
           produtos.splice(index, 1);
-          // Salva nova lista no localStorage
           salvaNoLocalStorage();
-          // Atualiza a lista na tela, com o filtro atual
           atualizaLista(filtroInput.value);
         }
       });
 
-      // Adiciona os botões na <div>
       buttonsDiv.appendChild(botaoEditar);
       buttonsDiv.appendChild(botaoRemover);
-
-      // Adiciona a <div> de botões no <li>
       li.appendChild(buttonsDiv);
-
-      // Adiciona o <li> completo na lista <ul>
       lista.appendChild(li);
     });
   }
 
-  // Atualiza a exibição do total de itens no final da lista
   totalDiv.textContent = `Total de itens: ${totalQtd}`;
 }
 
-
-// 💾 Função que salva a lista atual no localStorage
 function salvaNoLocalStorage() {
   localStorage.setItem("produtos", JSON.stringify(produtos));
 }
 
-
-// ✏️ Função para editar um produto da lista com prompt()
 function editarProduto(index) {
   const produto = produtos[index];
-
-  // Pergunta novo nome e quantidade ao usuário
   const novoNome = prompt("Novo nome do produto:", produto.nome);
   const novaQtd = prompt("Nova quantidade:", produto.quantidade);
 
-  // Validações: nome preenchido e quantidade válida (número maior que 0)
   if (novoNome && novaQtd && !isNaN(novaQtd) && Number(novaQtd) > 0) {
-    // Atualiza o produto no array
     produtos[index] = { nome: novoNome.trim(), quantidade: Number(novaQtd) };
-    // Salva alterações
     salvaNoLocalStorage();
-    // Atualiza visualmente com o filtro aplicado (se houver)
     atualizaLista(filtroInput.value);
   } else {
     alert("Dados inválidos. Edição cancelada.");
   }
 }
 
-
-// ➕ Evento ao enviar o formulário (adicionar novo item)
 form.addEventListener("submit", (event) => {
-  event.preventDefault(); // Impede recarregamento da página
-
-  // Pega os valores dos inputs
+  event.preventDefault();
   const nome = nomeInput.value.trim();
   const quantidade = Number(quantidadeInput.value);
 
-  // Validação: nome preenchido e quantidade maior que 0
   if (nome && quantidade > 0) {
-    // Adiciona novo produto ao array
     produtos.push({ nome, quantidade });
-    // Salva no localStorage
     salvaNoLocalStorage();
-    // Atualiza a lista visualmente
     atualizaLista(filtroInput.value);
-    // Limpa o formulário
     form.reset();
   }
 });
 
-
-// 🔍 Evento de digitação no campo de filtro
 filtroInput.addEventListener("input", (event) => {
-  // Atualiza a lista com base no texto digitado
   atualizaLista(event.target.value);
 });
 
-
-// 🚀 Inicializa a lista assim que a página é carregada
 atualizaLista();
 
+
+// ==============================
+// 🔢 Contador de cliques
+// ==============================
+
+// Pega valor salvo ou inicia com 0
+let cliques = parseInt(localStorage.getItem("cliques")) || 0;
+
+// Elementos do contador
+const botaoContador = document.getElementById("botao-contador");
+const contadorParagrafo = document.getElementById("contador");
+
+// Mostra o valor salvo
+contadorParagrafo.textContent = `Total de cliques: ${cliques}`;
+
+// Evento de clique no botão
+botaoContador.addEventListener("click", () => {
+  cliques++;
+  localStorage.setItem("cliques", cliques);
+  contadorParagrafo.textContent = `Total de cliques: ${cliques}`;
+});
+
+
+// ==============================
+// 💾 Salvar valor atual de cliques
+// ==============================
+
+const btnSalvarClique = document.getElementById("salvar-clique");
+const paragrafoCliqueSalvo = document.getElementById("clique-salvo");
+
+// Mostrar valor salvo anteriormente
+const cliqueSalvo = localStorage.getItem("cliquesSalvos") || 0;
+paragrafoCliqueSalvo.textContent = `Último clique salvo: ${cliqueSalvo}`;
+
+// Evento para salvar valor atual
+btnSalvarClique.addEventListener("click", () => {
+  localStorage.setItem("cliquesSalvos", cliques);
+  paragrafoCliqueSalvo.textContent = `Último clique salvo: ${cliques}`;
+});
 </script>
 </body>
 </html>
